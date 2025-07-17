@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}เข้าสู่ระบบ - Trash For Coin{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-5 col-md-7">
+                <div class="card shadow-lg border-0">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-4">
+                            <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="bi bi-box-arrow-in-right text-primary fs-1"></i>
+                            </div>
+                            <h2 class="fw-bold">เข้าสู่ระบบ</h2>
+                            <p class="text-muted">ยินดีต้อนรับกลับมาสู่ Trash For Coin</p>
+                        </div>
+
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                <i class="bi bi-info-circle me-2"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                        {% endwith %}
+
+                        <form method="POST" class="needs-validation" novalidate>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">อีเมล</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-envelope"></i>
+                                    </span>
+                                    <input type="email" class="form-control" id="email" name="email" placeholder="your@email.com" required>
+                                    <div class="invalid-feedback">กรุณากรอกอีเมลที่ถูกต้อง</div>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label for="password" class="form-label">รหัสผ่าน</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-lock"></i>
+                                    </span>
+                                    <input type="password" class="form-control" id="password" name="password" placeholder="รหัสผ่าน" required>
+                                    <div class="invalid-feedback">กรุณากรอกรหัสผ่าน</div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>เข้าสู่ระบบ
+                            </button>
+                        </form>
+
+                        <div class="text-center">
+                            <p class="text-muted mb-0">
+                                ยังไม่มีบัญชี? 
+                                <a href="{{ url_for('register') }}" class="text-primary text-decoration-none fw-bold">
+                                    สมัครสมาชิก
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function () {
+        'use strict';
+        window.addEventListener('load', function () {
+            var forms = document.getElementsByClassName('needs-validation');
+            var validation = Array.prototype.filter.call(forms, function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+</script>
+{% endblock %}

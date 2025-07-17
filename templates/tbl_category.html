@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}จัดการหมวดหมู่ - Trash For Coin{% endblock %}
+
+{% block content %}
+<section class="bg-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-4">จัดการหมวดหมู่ขยะ</h1>
+                <p class="lead mb-4">จัดการประเภทขยะ 5 ประเภทหลัก: PET, อลูมิเนียม, แก้ว, วัสดุเผา, ขยะปนเปื้อน</p>
+            </div>
+            <div class="col-lg-4">
+                <div class="text-end">
+                    {% if session.loggedin and (session.role == 'root_admin' or session.role == 'administrator' or session.role == 'moderator') %}
+                    <button class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                        <i class="bi bi-plus-circle me-2"></i>เพิ่มหมวดหมู่
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-4 bg-light">
+    <div class="container">
+        <form method="POST" class="row g-3">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" name="search" class="form-control" placeholder="ค้นหาชื่อหมวดหมู่ หรือรหัสหมวดหมู่" value="{{ search }}">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search me-2"></i>ค้นหา
+                    </button>
+                    <a href="{{ url_for('tbl_category') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise me-2"></i>รีเซ็ต
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                <i class="bi bi-info-circle me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-tags me-2"></i>รายการหมวดหมู่ขยะ
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" width="10%">#</th>
+                                <th scope="col" width="20%">รหัสหมวดหมู่</th>
+                                <th scope="col" width="40%">ชื่อหมวดหมู่</th>
+                                {% if session.loggedin and (session.role == 'root_admin' or session.role == 'administrator' or session.role == 'moderator') %}
+                                <th scope="col" width="30%">จัดการ</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if categories %}
+                            {% for category in categories %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ category.category_id }}</span>
+                                </td>
+                                <td>{{ category.category_name }}</td>
+                                {% if session.loggedin and (session.role == 'root_admin' or session.role == 'administrator' or session.role == 'moderator') %}
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-2" 
+                                            onclick="editCategory('{{ category.id }}', '{{ category.category_id }}', '{{ category.category_name }}')">
+                                        <i class="bi bi-pencil-square"></i> แก้ไข
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" 
+                                            onclick="deleteCategory('{{ category.id }}', '{{ category.category_name }}')">
+                                        <i class="bi bi-trash"></i> ลบ
+                                    </button>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox fs-1 mb-2"></i>
+                                    <br>ไม่พบข้อมูลหมวดหมู่
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Add Category Modal -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">เพิ่มหมวดหมู่ใหม่</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" class="needs-validation" novalidate>
+                <input type="hidden" name="action" value="add">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="add_category_id" class="form-label">รหัสหมวดหมู่</label>
+                        <input type="text" class="form-control" id="add_category_id" name="category_id" required>
+                        <div class="invalid-feedback">กรุณากรอกรหัสหมวดหมู่</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="add_category_name" class="form-label">ชื่อหมวดหมู่</label>
+                        <input type="text" class="form-control" id="add_category_name" name="category_name" required>
+                        <div class="invalid-feedback">กรุณากรอกชื่อหมวดหมู่</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary">เพิ่มหมวดหมู่</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Category Modal -->
+<div class="modal fade" id="editCategoryModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">แก้ไขหมวดหมู่</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" class="needs-validation" novalidate>
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="cat_id" id="edit_cat_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_category_id" class="form-label">รหัสหมวดหมู่</label>
+                        <input type="text" class="form-control" id="edit_category_id" name="category_id" required>
+                        <div class="invalid-feedback">กรุณากรอกรหัสหมวดหมู่</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_category_name" class="form-label">ชื่อหมวดหมู่</label>
+                        <input type="text" class="form-control" id="edit_category_name" name="category_name" required>
+                        <div class="invalid-feedback">กรุณากรอกชื่อหมวดหมู่</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary">บันทึกการเปลี่ยนแปลง</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<form id="deleteForm" method="POST" style="display: none;">
+    <input type="hidden" name="action" value="delete">
+    <input type="hidden" name="cat_id" id="delete_cat_id">
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function () {
+        'use strict';
+        window.addEventListener('load', function () {
+            var forms = document.getElementsByTagName('form');
+            var validation = Array.prototype.filter.call(forms, function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+
+    function editCategory(id, category_id, category_name) {
+        document.getElementById('edit_cat_id').value = id;
+        document.getElementById('edit_category_id').value = category_id;
+        document.getElementById('edit_category_name').value = category_name;
+        
+        var editModal = new bootstrap.Modal(document.getElementById('editCategoryModal'));
+        editModal.show();
+    }
+
+    function deleteCategory(id, name) {
+        if (confirm('ต้องการลบหมวดหมู่ ' + name + ' หรือไม่?')) {
+            document.getElementById('delete_cat_id').value = id;
+            document.getElementById('deleteForm').submit();
+        }
+    }
+</script>
+{% endblock %}

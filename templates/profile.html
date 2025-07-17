@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}โปรไฟล์ - Trash For Coin{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body text-center p-4">
+                        <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 100px; height: 100px;">
+                            <i class="bi bi-person-circle text-primary" style="font-size: 4rem;"></i>
+                        </div>
+                        {% if session.loggedin %}
+                        <h4 class="fw-bold mb-2">{{ session.firstname }} {{ session.lastname }}</h4>
+                        <p class="text-muted mb-3">{{ session.email }}</p>
+                        <span class="badge fs-6 px-3 py-2
+                            {% if session.role == 'root_admin' %}bg-danger
+                            {% elif session.role == 'administrator' %}bg-warning text-dark
+                            {% elif session.role == 'moderator' %}bg-info text-dark
+                            {% elif session.role == 'member' %}bg-primary
+                            {% elif session.role == 'viewer' %}bg-secondary
+                            {% else %}bg-light text-dark{% endif %}">
+                            <i class="bi bi-shield-check me-1"></i>
+                            {{ session.role | title }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0 fw-bold">
+                            <i class="bi bi-person-gear me-2"></i>
+                            ข้อมูลส่วนตัว
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        {% if session.loggedin %}
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                <i class="bi bi-info-circle me-2"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                        {% endwith %}
+
+                        <form method="POST" class="needs-validation" novalidate>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="firstname" class="form-label">ชื่อ</label>
+                                    <input type="text" class="form-control" id="firstname" name="firstname" value="{{ session.firstname }}" required>
+                                    <div class="invalid-feedback">กรุณากรอกชื่อ</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="lastname" class="form-label">นามสกุล</label>
+                                    <input type="text" class="form-control" id="lastname" name="lastname" value="{{ session.lastname }}" required>
+                                    <div class="invalid-feedback">กรุณากรอกนามสกุล</div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">อีเมล</label>
+                                <input type="email" class="form-control" id="email" name="email" value="{{ session.email }}" required>
+                                <div class="invalid-feedback">กรุณากรอกอีเมลที่ถูกต้อง</div>
+                            </div>
+                            <div class="mb-4">
+                                <label for="password" class="form-label">รหัสผ่าน (เว้นว่างหากไม่เปลี่ยนแปลง)</label>
+                                <input type="password" class="form-control" id="password" name="password" placeholder="••••••••">
+                                <div class="form-text">ใส่รหัสผ่านใหม่หากต้องการเปลี่ยนแปลง</div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save me-2"></i>บันทึกการเปลี่ยนแปลง
+                                </button>
+                                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left me-2"></i>กลับหน้าแรก
+                                </a>
+                            </div>
+                        </form>
+                        {% else %}
+                        <div class="text-center">
+                            <p class="text-muted">กรุณาเข้าสู่ระบบเพื่อดูข้อมูลโปรไฟล์</p>
+                            <a href="{{ url_for('login') }}" class="btn btn-primary">เข้าสู่ระบบ</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function () {
+        'use strict';
+        window.addEventListener('load', function () {
+            var forms = document.getElementsByClassName('needs-validation');
+            var validation = Array.prototype.filter.call(forms, function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+</script>
+{% endblock %}

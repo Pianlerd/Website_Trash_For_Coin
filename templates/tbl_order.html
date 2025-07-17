@@ -1,0 +1,413 @@
+{% extends "base.html" %}
+
+{% block title %}จัดการคำสั่งซื้อ - Trash For Coin{% endblock %}
+
+{% block content %}
+<section class="bg-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-4">ตารางเก็บข้อมูลคำสั่งซื้อ</h1>
+                <p class="lead mb-4">จัดการคำสั่งซื้อทั้งหมดในระบบ</p>
+            </div>
+            <div class="col-lg-4">
+                <div class="text-end">
+                    {% if session.loggedin and (session.role == 'root_admin' or session.role == 'administrator' or session.role == 'moderator' or session.role == 'member') %}
+                    <button class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#addOrderModal">
+                        <i class="bi bi-plus-circle me-2"></i>เพิ่มคำสั่งซื้อใหม่
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-4 bg-light">
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                <i class="bi bi-info-circle me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST" class="row g-3">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" name="search" class="form-control" placeholder="ค้นหารหัสคำสั่งซื้อ, ชื่อสินค้า, หรืออีเมลลูกค้า" value="{{ search }}">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search me-2"></i>ค้นหา
+                    </button>
+                    <a href="{{ url_for('tbl_order') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise me-2"></i>รีเซ็ต
+                    </a>
+                    {% if session.loggedin and (session.role == 'root_admin' or session.role == 'administrator' or session.role == 'moderator' or session.role == 'member') %}
+                    <a href="{{ url_for('export_orders_pdf') }}" class="btn btn-outline-danger" title="ส่งออกรายงาน PDF">
+                        <i class="bi bi-file-earmark-pdf me-2"></i>PDF
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-cart-check me-2"></i>รายการคำสั่งซื้อ
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">ID</th>
+                                <th scope="col">รหัสคำสั่งซื้อ</th>
+                                <th scope="col">รหัสสินค้า</th>
+                                <th scope="col">ชื่อสินค้า</th>
+                                <th scope="col">รหัสบาร์โค้ด</th>
+                                <th scope="col">รหัสหมวดหมู่</th>
+                                <th scope="col">จำนวน</th>
+                                <th scope="col">จำนวนสินค้าที่ถูกทิ้ง (ขยะ)</th>
+                                <th scope="col">อีเมลลูกค้า</th>
+                                <th scope="col">วันที่สั่งซื้อ</th>
+                                {% if session.loggedin and (session.role == 'root_admin' or session.role == 'administrator' or session.role == 'moderator' or session.role == 'member') %}
+                                <th scope="col">จัดการ</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if orders %}
+                            {% for order in orders %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ order.id }}</td>
+                                <td>{{ order.order_id }}</td>
+                                <td>{{ order.products_id }}</td>
+                                <td>{{ order.products_name }}</td>
+                                <td>{{ order.barcode_id }}</td>
+                                <td>{{ order.category_id }}</td>
+                                <td class="text-center">{{ order.quantity }}</td>
+                                <td class="text-center">{{ order.disquantity }}</td>
+                                <td>{{ order.email }}</td>
+                                <td>{{ order.order_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                {% if session.loggedin and (session.role == 'root_admin' or session.role == 'administrator' or session.role == 'moderator' or session.role == 'member') %}
+                                <td>
+                                    <button class="btn btn-sm btn-outline-info me-2" 
+                                            onclick="viewOrder('{{ order.id }}', '{{ order.order_id }}', '{{ order.products_name }}', '{{ order.quantity }}', '{{ order.email }}', '{{ order.barcode_id }}', '{{ order.disquantity }}')">
+                                        <i class="bi bi-eye"></i> ดู
+                                    </button>
+                                    {% if session.role in ['root_admin', 'administrator', 'moderator'] or (session.role == 'member' and order.email == session.email) %}
+                                    <button class="btn btn-sm btn-outline-primary me-2" 
+                                            onclick="editOrder('{{ order.id }}', '{{ order.order_id }}', '{{ order.products_id }}', '{{ order.products_name }}', '{{ order.barcode_id }}', '{{ order.quantity }}', '{{ order.disquantity }}', '{{ order.category_id }}', '{{ order.email }}')">
+                                        <i class="bi bi-pencil-square"></i> แก้ไข
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" 
+                                            onclick="deleteOrder('{{ order.id }}', '{{ order.order_id }}', '{{ order.email }}')">
+                                        <i class="bi bi-trash"></i> ลบ
+                                    </button>
+                                    {% endif %}
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="12" class="text-center text-muted">ไม่พบข้อมูลคำสั่งซื้อ</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="addOrderModal" tabindex="-1" aria-labelledby="addOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addOrderModalLabel">เพิ่มคำสั่งซื้อใหม่</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" class="needs-validation" novalidate>
+                <input type="hidden" name="action" value="add">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="add_order_id" class="form-label">รหัสคำสั่งซื้อ</label>
+                        <input type="text" class="form-control" id="add_order_id" name="order_id" required>
+                        <div class="invalid-feedback">กรุณากรอกรหัสคำสั่งซื้อ</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="add_products_id" class="form-label">สินค้า</label>
+                        <select class="form-select" id="add_products_id" name="products_id" required>
+                            <option value="">เลือกสินค้า</option>
+                            {% for product in products %}
+                            <option value="{{ product.products_id }}" data-stock="{{ product.stock }}" data-price="{{ product.price }}">{{ product.products_name }} (สต็อก: {{ product.stock }})</option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">กรุณาเลือกสินค้า</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="add_quantity" class="form-label">จำนวน</label>
+                        <input type="number" class="form-control" id="add_quantity" name="quantity" required min="1">
+                        <div class="invalid-feedback">กรุณากรอกจำนวนสินค้าที่ต้องการสั่งซื้อ</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="add_email" class="form-label">อีเมลลูกค้า</label>
+                        <input type="email" class="form-control" id="add_email" name="email" value="{{ session.email if session.role == 'member' else '' }}" {% if session.role == 'member' %}readonly{% endif %} required>
+                        <div class="invalid-feedback">กรุณากรอกอีเมลลูกค้า</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="add_disquantity" class="form-label">จำนวนสินค้าที่ถูกทิ้ง (ขยะ)</label>
+                        <input type="number" class="form-control" id="add_disquantity" name="disquantity" required min="0">
+                        <div class="invalid-feedback">กรุณากรอกจำนวนสินค้าที่ถูกทิ้ง (ขยะ)</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="add_barcode_id" class="form-label">รหัสบาร์โค้ด</label>
+                        <input type="text" class="form-control" id="add_barcode_id" name="barcode_id" required>
+                        <div class="invalid-feedback">กรุณากรอกรหัสบาร์โค้ด</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary">เพิ่มคำสั่งซื้อ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editOrderModal" tabindex="-1" aria-labelledby="editOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="editOrderModalLabel">แก้ไขคำสั่งซื้อ</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" class="needs-validation" novalidate>
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="ord_id" id="edit_ord_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_order_id" class="form-label">รหัสคำสั่งซื้อ</label>
+                        <input type="text" class="form-control" id="edit_order_id" name="order_id" required>
+                        <div class="invalid-feedback">กรุณากรอกรหัสคำสั่งซื้อ</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_products_id" class="form-label">สินค้า</label>
+                        <select class="form-select" id="edit_products_id" name="products_id" required>
+                            <option value="">เลือกสินค้า</option>
+                            {% for product in products %}
+                            <option value="{{ product.products_id }}" data-stock="{{ product.stock }}" data-price="{{ product.price }}" data-barcode="{{ product.barcode_id }}" data-category="{{ product.category_id }}">{{ product.products_name }} (สต็อก: {{ product.stock }})</option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">กรุณาเลือกสินค้า</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_barcode_id" class="form-label">รหัสบาร์โค้ด</label>
+                        <input type="text" class="form-control" id="edit_barcode_id" name="barcode_id" required>
+                        <div class="invalid-feedback">กรุณากรอกรหัสบาร์โค้ด</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_quantity" class="form-label">จำนวน</label>
+                        <input type="number" class="form-control" id="edit_quantity" name="quantity" required min="1">
+                        <div class="invalid-feedback">กรุณากรอกจำนวนสินค้าที่ต้องการสั่งซื้อ</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_disquantity" class="form-label">จำนวนสินค้าที่ถูกทิ้ง (ขยะ)</label>
+                        <input type="number" class="form-control" id="edit_disquantity" name="disquantity" required min="0">
+                        <div class="invalid-feedback">กรุณากรอกจำนวนสินค้าที่ถูกทิ้ง (ขยะ)</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_email" class="form-label">อีเมลลูกค้า</label>
+                        <input type="email" class="form-control" id="edit_email" name="email" value="{{ session.email if session.role == 'member' else '' }}" {% if session.role == 'member' %}readonly{% endif %} required>
+                        <div class="invalid-feedback">กรุณากรอกอีเมลลูกค้า</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary">บันทึกการเปลี่ยนแปลง</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="viewOrderModal" tabindex="-1" aria-labelledby="viewOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="viewOrderModalLabel">รายละเอียดคำสั่งซื้อ</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>รหัสคำสั่งซื้อ:</strong> <span id="view_order_id"></span></p>
+                <p><strong>ชื่อสินค้า:</strong> <span id="view_products_name"></span></p>
+                <p><strong>จำนวน:</strong> <span id="view_quantity"></span></p>
+                <p><strong>จำนวนสินค้าที่ถูกทิ้ง (ขยะ):</strong> <span id="view_disquantity"></span></p>
+                <p><strong>อีเมลลูกค้า:</strong> <span id="view_email"></span></p>
+                <p><strong>รหัสบาร์โค้ด:</strong> <span id="view_barcode_id"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="deleteForm" method="POST" style="display: none;">
+    <input type="hidden" name="action" value="delete">
+    <input type="hidden" name="ord_id" id="delete_ord_id">
+    <input type="hidden" name="email" id="delete_order_email">
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function () {
+        'use strict';
+        window.addEventListener('load', function () {
+            var forms = document.getElementsByTagName('form');
+            var validation = Array.prototype.filter.call(forms, function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+
+    // --- Variables for Add Order Modal ---
+    const addProductsIdSelect = document.getElementById('add_products_id');
+    const addQuantityInput = document.getElementById('add_quantity');
+    const addDisquantityInput = document.getElementById('add_disquantity'); // New: Get disquantity for add modal
+    const addBarcodeIdInput = document.getElementById('add_barcode_id'); // New: Get barcode_id for add modal
+
+    // Function to get the current selected product's stock for Add Modal
+    function getAddSelectedProductStock() {
+        const selectedOption = addProductsIdSelect.options[addProductsIdSelect.selectedIndex];
+        return parseInt(selectedOption.dataset.stock);
+    }
+
+    // Validation for quantity in Add Modal (must not exceed stock)
+    function validateAddQuantityAgainstStock() {
+        const currentQuantity = parseInt(addQuantityInput.value);
+        const availableStock = getAddSelectedProductStock();
+
+        if (isNaN(currentQuantity) || currentQuantity < 1) {
+            addQuantityInput.setCustomValidity('กรุณากรอกจำนวนสินค้าที่ถูกต้องและมากกว่า 0');
+        } else if (currentQuantity > availableStock) {
+            addQuantityInput.setCustomValidity(`จำนวนที่สั่งซื้อต้องไม่เกินสต็อกที่มี (${availableStock})`);
+        } else {
+            addQuantityInput.setCustomValidity('');
+        }
+    }
+
+    // Add event listeners for Add Order Modal
+    if (addProductsIdSelect && addQuantityInput) {
+        addProductsIdSelect.addEventListener('change', validateAddQuantityAgainstStock);
+        addQuantityInput.addEventListener('input', validateAddQuantityAgainstStock);
+        // No client-side validation for addDisquantity or addBarcodeId beyond 'required' and 'min=0' now.
+    }
+
+
+    // --- Functions for Edit Order Modal ---
+    function editOrder(id, order_id, products_id, products_name, barcode_id, quantity, disquantity, category_id, email) {
+        document.getElementById('edit_ord_id').value = id;
+        document.getElementById('edit_order_id').value = order_id;
+        const editProductsIdSelect = document.getElementById('edit_products_id');
+        editProductsIdSelect.value = products_id; // Set selected product ID
+
+        const editBarcodeIdInput = document.getElementById('edit_barcode_id'); // Get the barcode input
+        editBarcodeIdInput.value = barcode_id; // Set barcode_id initially (now editable)
+
+        const editQuantityInput = document.getElementById('edit_quantity');
+        editQuantityInput.value = quantity;
+        const editDisquantityInput = document.getElementById('edit_disquantity');
+        editDisquantityInput.value = disquantity; // Set disquantity
+        document.getElementById('edit_email').value = email;
+
+        // Function to get the current selected product's stock for Edit Modal
+        function getEditSelectedProductStock() {
+            const selectedOption = editProductsIdSelect.options[editProductsIdSelect.selectedIndex];
+            return parseInt(selectedOption.dataset.stock);
+        }
+
+        // Validation for quantity in Edit Modal (must not exceed stock)
+        function validateEditQuantityAgainstStock() {
+            const currentQuantity = parseInt(editQuantityInput.value);
+            const availableStock = getEditSelectedProductStock();
+
+            if (isNaN(currentQuantity) || currentQuantity < 1) {
+                editQuantityInput.setCustomValidity('กรุณากรอกจำนวนสินค้าที่ต้องการสั่งซื้อที่ถูกต้องและมากกว่า 0');
+            } else if (currentQuantity > availableStock) {
+                editQuantityInput.setCustomValidity(`จำนวนที่สั่งซื้อต้องไม่เกินสต็อกที่มี (${availableStock})`);
+            } else {
+                editQuantityInput.setCustomValidity('');
+            }
+        }
+
+        // --- Removed validateEditDisquantity function ---
+        // --- Removed updateBarcodeAndCategory function for barcode input (now manual) ---
+
+        // Remove previous listeners to prevent duplicates (important for modals)
+        editQuantityInput.removeEventListener('input', validateEditQuantityAgainstStock);
+        editProductsIdSelect.removeEventListener('change', validateEditQuantityAgainstStock);
+        // Removed listeners related to disquantity validation and barcode auto-update
+
+        // Add new listeners
+        editQuantityInput.addEventListener('input', validateEditQuantityAgainstStock);
+        editProductsIdSelect.addEventListener('change', validateEditQuantityAgainstStock);
+
+        // Initial validation and update when modal opens
+        validateEditQuantityAgainstStock();
+        // No initial call for disquantity validation or barcode update from product select
+
+        var editModal = new bootstrap.Modal(document.getElementById('editOrderModal'));
+        editModal.show();
+    }
+
+    function viewOrder(id, order_id, products_name, quantity, email, barcode_id, disquantity) {
+        document.getElementById('view_order_id').textContent = order_id;
+        document.getElementById('view_products_name').textContent = products_name;
+        document.getElementById('view_quantity').textContent = quantity;
+        document.getElementById('view_disquantity').textContent = disquantity;
+        document.getElementById('view_email').textContent = email;
+        document.getElementById('view_barcode_id').textContent = barcode_id;
+
+        var viewModal = new bootstrap.Modal(document.getElementById('viewOrderModal'));
+        viewModal.show();
+    }
+
+    function deleteOrder(id, order_id, email) {
+        if (confirm('ต้องการลบคำสั่งซื้อ ' + order_id + ' หรือไม่?')) {
+            document.getElementById('delete_ord_id').value = id;
+            document.getElementById('delete_order_email').value = email;
+            document.getElementById('deleteForm').submit();
+        }
+    }
+</script>
+{% endblock %}

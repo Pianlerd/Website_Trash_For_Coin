@@ -1,0 +1,374 @@
+{% extends "base.html" %}
+
+{% block title %}ลงทะเบียน - Project Bin{% endblock %}
+
+{% block content %}
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow-lg border-0">
+                    <div class="card-header bg-primary text-white text-center py-4">
+                        <h3 class="mb-0">
+                            <i class="bi bi-person-plus me-2"></i>ลงทะเบียนเข้าใช้งาน
+                        </h3>
+                        <p class="mb-0 mt-2">เลือกประเภทการใช้งานที่เหมาะกับคุณ</p>
+                    </div>
+                    <div class="card-body p-5">
+                        {% if msg %}
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            <i class="bi bi-info-circle me-2"></i>
+                            {{ msg }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-4">
+                            <h5 class="text-center mb-4">เลือกประเภทการลงทะเบียน</h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="card border-info h-100" id="viewerCard" style="cursor: pointer;">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-eye display-4 text-info mb-3"></i>
+                                            <h6 class="card-title">Viewer</h6>
+                                            <p class="card-text small">เยี่ยมชมเว็บไซต์<br>ดูข้อมูลสินค้าและบริการ</p>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="user_type_radio" id="viewer_type" value="viewer" checked>
+                                                <label class="form-check-label" for="viewer_type">
+                                                    เลือกเป็น Viewer
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-warning h-100" id="moderatorCard" style="cursor: pointer;">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-shop display-4 text-warning mb-3"></i>
+                                            <h6 class="card-title">Moderator</h6>
+                                            <p class="card-text small">ลงทะเบียนในนามร้านค้า<br>จัดการสินค้าและคำสั่งซื้อ</p>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="user_type_radio" id="moderator_type" value="moderator">
+                                                <label class="form-check-label" for="moderator_type">
+                                                    เลือกเป็น Moderator
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form method="POST" id="registerForm">
+                            <input type="hidden" name="user_type" id="selected_user_type" value="viewer">
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="firstname" class="form-label">ชื่อ</label>
+                                    <input type="text" class="form-control" id="firstname" name="firstname" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="lastname" class="form-label">นามสกุล</label>
+                                    <input type="text" class="form-control" id="lastname" name="lastname" required>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="email" class="form-label">อีเมล</label>
+                                    <input type="email" class="form-control" id="email" name="email" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="password" class="form-label">รหัสผ่าน</label>
+                                    <input type="password" class="form-control" id="password" name="password" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="confirm_password" class="form-label">ยืนยันรหัสผ่าน</label>
+                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                            </div>
+
+                            <div id="moderatorFields" style="display: none;">
+                                <hr class="my-4">
+                                <h6 class="text-warning mb-3">
+                                    <i class="bi bi-shop me-2"></i>ข้อมูลร้านค้า
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="shop_name" class="form-label">ชื่อร้านค้า</label>
+                                        <input type="text" class="form-control" id="shop_name" name="shop_name">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="phone" class="form-label">เบอร์โทรศัพท์</label>
+                                        <input type="tel" class="form-control" id="phone" name="phone">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="address" class="form-label">ที่อยู่ร้านค้า</label>
+                                    <textarea class="form-control" id="address" name="address" rows="3"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="business_type" class="form-label">ประเภทธุรกิจ</label>
+                                    <select class="form-select" id="business_type" name="business_type">
+                                        <option value="">เลือกประเภทธุรกิจ</option>
+                                        <option value="convenience_store">ร้านสะดวกซื้อ</option>
+                                        <option value="supermarket">ซูเปอร์มาร์เก็ต</option>
+                                        <option value="restaurant">ร้านอาหาร</option>
+                                        <option value="cafe">ร้านกาแฟ</option>
+                                        <option value="retail">ร้านค้าปลีก</option>
+                                        <option value="other">อื่นๆ</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    <strong>หมายเหตุ:</strong> การลงทะเบียนเป็น Moderator จะต้องผ่านการอนุมัติจากผู้ดูแลระบบ 
+                                    ข้อมูลจะถูกส่งไปยัง <strong>pianlerdpringpror@gmail.com</strong> เพื่อพิจารณา
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-person-check me-2"></i>ลงทะเบียน
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="text-center mt-4">
+                            <p class="mb-0">มีบัญชีอยู่แล้ว? 
+                                <a href="{{ url_for('login') }}" class="text-decoration-none">เข้าสู่ระบบ</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="contactModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-envelope me-2"></i>ติดต่อเพื่อลงทะเบียน Moderator
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    ข้อมูลการลงทะเบียนของคุณจะถูกส่งไปยังผู้ดูแลระบบเพื่อพิจารณาอนุมัติ
+                </div>
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <strong>อีเมลติดต่อ:</strong>
+                        <p class="text-primary">pianlerdpringpror@gmail.com</p>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <strong>ข้อมูลที่จะส่ง:</strong>
+                        <ul class="list-unstyled ms-3">
+                            <li>• ชื่อ</li>
+                            <li>• นามสกุล</li>
+                            <li>• อีเมล</li>
+                            <li>• ชื่อร้านค้า</li>
+                            <li>• เบอร์โทรศัพท์</li>
+                            <li>• ที่อยู่ร้านค้า</li>
+                            <li>• ประเภทธุรกิจ</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                <button type="button" class="btn btn-primary" onclick="submitModeratorRegistration()">
+                    <i class="bi bi-send me-2"></i>ส่งข้อมูล
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Handle user type selection
+    document.addEventListener('DOMContentLoaded', function() {
+        const viewerCard = document.getElementById('viewerCard');
+        const moderatorCard = document.getElementById('moderatorCard');
+        const viewerRadio = document.getElementById('viewer_type');
+        const moderatorRadio = document.getElementById('moderator_type');
+        const moderatorFields = document.getElementById('moderatorFields');
+        const selectedUserType = document.getElementById('selected_user_type');
+        const form = document.getElementById('registerForm');
+
+        // Card click handlers
+        viewerCard.addEventListener('click', function() {
+            viewerRadio.checked = true;
+            selectedUserType.value = 'viewer';
+            moderatorFields.style.display = 'none';
+            updateCardStyles();
+            clearModeratorFields();
+        });
+
+        moderatorCard.addEventListener('click', function() {
+            moderatorRadio.checked = true;
+            selectedUserType.value = 'moderator';
+            moderatorFields.style.display = 'block';
+            updateCardStyles();
+            setModeratorFieldsRequired();
+        });
+
+        // Radio button change handlers
+        viewerRadio.addEventListener('change', function() {
+            if (this.checked) {
+                selectedUserType.value = 'viewer';
+                moderatorFields.style.display = 'none';
+                updateCardStyles();
+                clearModeratorFields();
+            }
+        });
+
+        moderatorRadio.addEventListener('change', function() {
+            if (this.checked) {
+                selectedUserType.value = 'moderator';
+                moderatorFields.style.display = 'block';
+                updateCardStyles();
+                setModeratorFieldsRequired();
+            }
+        });
+
+        function updateCardStyles() {
+            if (viewerRadio.checked) {
+                viewerCard.classList.add('border-primary', 'bg-light');
+                viewerCard.classList.remove('border-info');
+                moderatorCard.classList.add('border-warning');
+                moderatorCard.classList.remove('border-primary', 'bg-light');
+            } else {
+                moderatorCard.classList.add('border-primary', 'bg-light');
+                moderatorCard.classList.remove('border-warning');
+                viewerCard.classList.add('border-info');
+                viewerCard.classList.remove('border-primary', 'bg-light');
+            }
+        }
+
+        function clearModeratorFields() {
+            document.getElementById('shop_name').removeAttribute('required');
+            document.getElementById('phone').removeAttribute('required');
+            document.getElementById('address').removeAttribute('required');
+            document.getElementById('business_type').removeAttribute('required');
+
+            // Optionally clear values as well
+            document.getElementById('shop_name').value = '';
+            document.getElementById('phone').value = '';
+            document.getElementById('address').value = '';
+            document.getElementById('business_type').value = '';
+        }
+
+        function setModeratorFieldsRequired() {
+            document.getElementById('shop_name').setAttribute('required', 'required');
+            document.getElementById('phone').setAttribute('required', 'required');
+            document.getElementById('address').setAttribute('required', 'required');
+            document.getElementById('business_type').setAttribute('required', 'required');
+        }
+
+        // Form validation
+        form.addEventListener('submit', function(event) {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            
+            if (password !== confirmPassword) {
+                event.preventDefault();
+                alert('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน');
+                return false;
+            }
+
+            // If moderator registration, show contact modal instead of direct submission
+            if (selectedUserType.value === 'moderator') {
+                event.preventDefault(); // Prevent default form submission for moderator type
+                const contactModal = new bootstrap.Modal(document.getElementById('contactModal'));
+                contactModal.show();
+                // No return false here, as we want the submitModeratorRegistration to handle the email and form reset
+            }
+        });
+
+        // Initialize card styles on page load
+        updateCardStyles();
+        // Clear moderator fields and remove required attributes on initial load for viewer
+        clearModeratorFields(); 
+    });
+
+    function submitModeratorRegistration() {
+        // Collect form data
+        const formData = {
+            user_type: document.getElementById('selected_user_type').value, // Get the actual selected type
+            firstname: document.getElementById('firstname').value,
+            lastname: document.getElementById('lastname').value,
+            email: document.getElementById('email').value,
+            shop_name: document.getElementById('shop_name').value,
+            phone: document.getElementById('phone').value,
+            address: document.getElementById('address').value,
+            business_type: document.getElementById('business_type').value
+        };
+
+        // Create email content
+        const emailSubject = 'คำขอลงทะเบียน Moderator - Project Bin';
+        const emailBody = `
+เรียน ผู้ดูแลระบบ
+
+มีคำขอลงทะเบียนเป็น Moderator ใหม่ ดังนี้:
+
+ข้อมูลส่วนตัว:
+- ชื่อ: ${formData.firstname}
+- นามสกุล: ${formData.lastname}
+- อีเมล: ${formData.email}
+
+ข้อมูลร้านค้า:
+- ชื่อร้านค้า: ${formData.shop_name}
+- เบอร์โทรศัพท์: ${formData.phone}
+- ที่อยู่: ${formData.address}
+- ประเภทธุรกิจ: ${formData.business_type}
+
+กรุณาพิจารณาอนุมัติการลงทะเบียน
+
+ขอบคุณครับ/ค่ะ
+        `;
+
+        // Create mailto link
+        const mailtoLink = `mailto:pianlerdpringpror@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+        
+        // Open email client
+        window.location.href = mailtoLink;
+        
+        // Close modal and show success message
+        const contactModal = bootstrap.Modal.getInstance(document.getElementById('contactModal'));
+        contactModal.hide();
+        
+        // Show success alert
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success alert-dismissible fade show mt-3'; // Added mt-3 for spacing
+        alertDiv.innerHTML = `
+            <i class="bi bi-check-circle me-2"></i>
+            ข้อมูลการลงทะเบียนถูกส่งไปยังผู้ดูแลระบบแล้ว กรุณารอการติดต่อกลับ
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const cardBody = document.querySelector('.card-body');
+        // Insert after the existing alert or at the top of the card-body if no other alert
+        const existingAlert = cardBody.querySelector('.alert-info, .alert-danger');
+        if (existingAlert) {
+            existingAlert.insertAdjacentElement('afterend', alertDiv);
+        } else {
+            cardBody.insertBefore(alertDiv, cardBody.firstChild);
+        }
+        
+        // Reset form
+        document.getElementById('registerForm').reset();
+        document.getElementById('viewer_type').checked = true;
+        document.getElementById('selected_user_type').value = 'viewer';
+        document.getElementById('moderatorFields').style.display = 'none';
+        clearModeratorFields(); // Clear and remove required for the reset state
+    }
+</script>
+{% endblock %}
